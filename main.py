@@ -25,11 +25,21 @@ def main() -> int:
         print("error: line is empty", file=sys.stderr)
         return 1
 
+    if "\n" in LINE or "\r" in LINE:
+        print("error: line must be a single line", file=sys.stderr)
+        return 1
+
     out_dir = os.environ.get("MAKEFUN_OUTPUT_DIR") or "/output"
     os.makedirs(out_dir, exist_ok=True)
     out_path = os.path.join(out_dir, "entry.txt")
-    with open(out_path, "w", encoding="utf-8") as fh:
+    with open(out_path, "w", encoding="utf-8", newline="\n") as fh:
         fh.write(LINE + "\n")
+
+    # Verify the file round-trips: exactly the line plus one trailing newline.
+    with open(out_path, "r", encoding="utf-8", newline="") as fh:
+        if fh.read() != LINE + "\n":
+            print("error: written entry does not match the line", file=sys.stderr)
+            return 1
 
     print(f"wrote {len(LINE)} characters to {out_path}")
     return 0
